@@ -29,11 +29,42 @@ const levels = [
 let level = levels[0];
 let score = 0;
 
+const openKeyboard = () => {
+  document.getElementById("input").focus();
+};
+
 const getRandomLetter = () =>
   level.letters[Math.floor(Math.random() * level.letters.length)];
 
 let board = [];
 let activeCols = [];
+
+const getRandomIndex = () => Math.floor(Math.random() * board[0].length);
+
+const addActiveCol = () => {
+    const randomIndex = getRandomIndex();
+    const already = activeCols.find((col) => col.x == randomIndex);
+    if (already) {
+	return addActiveCol();
+    }
+
+  activeCols.push({ letter: board[0][randomIndex], x: randomIndex, y: 0 });
+};
+
+const updateActiveCols = () => {
+  activeCols.forEach((col) => {
+    const max = col.y + 1;
+      for(let row = 0; row < max; row++) {
+	if (board[row]) {
+	  board[row][col.x] = col.letter;
+	}
+      }
+
+      if (board[max]) {
+	col.y = max;
+      }
+  });
+};
 
 const resetBoard = (nextLevel) => {
   board = Array(Math.floor(canvas.height / fontSize))
@@ -44,8 +75,8 @@ const resetBoard = (nextLevel) => {
     board[0][col] = getRandomLetter();
   }
 
-  if (nextLevel) {
-    activeCols = [];
+
+    if (nextLevel) {
     console.log("next level", level);
     const index = levels.findIndex((l) => l.speed === level.speed);
     if (levels[index + 1]) {
@@ -73,40 +104,31 @@ const setupCanvas = (ctx) => {
 };
 
 const drawBoard = () => {
-  for (const row in board) {
+    for (const row in board) {
     for (const col in board[row]) {
       const letter = board[row][col];
-      if (letter) {
-        ctx.fillText(letter, col * fontSize, row * fontSize);
+	if (letter) {
+	  let x = fontSize + col * fontSize;
+	ctx.fillText(letter, x, row * fontSize);
       }
     }
   }
 };
 
-const getRandomIndex = () => Math.floor(Math.random() * board[0].length);
-
-const addActiveCol = () => {
-  const randomIndex = getRandomIndex();
-  activeCols.push({ letter: board[0][randomIndex], x: randomIndex, y: 0 });
-};
 
 setInterval(() => {
   setupCanvas(ctx);
-
-  activeCols.forEach((col) => {
-    const row = col.y + 1;
-    if (board[row]) {
-      board[row][col.x] = col.letter;
-      col.y = row;
-    }
-  });
 
   if (Math.random() < 0.1 || activeCols.length === 0) {
     addActiveCol();
   }
 
+  updateActiveCols();
+
   drawBoard();
-}, 800 - level.speed * 50);
+}, 800 - level.speed * 60);
+
+document.addEventListener("touchstart", openKeyboard);
 
 document.addEventListener("keydown", (event) => {
   event.preventDefault();
@@ -121,7 +143,6 @@ document.addEventListener("keydown", (event) => {
       board[row][activeCol.x] = "";
     }
 
-    //playFrequency(440);
     console.log("yey", score, level);
     score++;
     playFrequency(440, "sine");
