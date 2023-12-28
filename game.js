@@ -32,14 +32,14 @@ const playFrequency = async (frequency, type) => {
 };
 
 const resizeCanvas = () => {
-  const { innerHeight, innerWidth } = window;
+  const { height, width } = window.visualViewport;
 
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-  canvas.style.width = innerWidth + "px";
-  canvas.style.height = innerHeight + "px";
-  backBuffer.width = innerWidth;
-  backBuffer.height = innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+  canvas.style.width = width + "px";
+  canvas.style.height = height + "px";
+  backBuffer.width = width;
+  backBuffer.height = height;
   resetBoard();
 };
 
