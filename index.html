@@ -2,35 +2,42 @@
 <html>
   <head>
     <title>Ord Pop!</title>
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="theme-color" content="#000000">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <style>
       body,
       html {
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-	background: #000000;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #000000;
       }
       canvas {
-	display: block;
-	width: 100%;
-	height: 100vh;
-	position: absolute;
-	top: 0;
+        display: block;
+        width: 100%;
+        height: 100vh;
+        position: absolute;
+        top: 0;
       }
 
       input,
-      :focus{
-	  font-size: 16px;
-	  -webkit-user-select: none;
-	  caret-color: transparent;
+      :focus {
+        font-size: 16px;
+        -webkit-user-select: none;
+        user-select: none;
+        caret-color: transparent;
+        background: transparent;
+        border: none;
+        outline: none;
       }
     </style>
   </head>
   <body>
-    <input id="input" type="text" autofocus>
+    <input id="input" type="text" autofocus />
     <canvas id="myCanvas">Your browser does not support canvas</canvas>
 
     <script src="game.js">
