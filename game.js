@@ -10,6 +10,12 @@ let oscillator = null;
 let gain = null;
 let gameState = "notstarted";
 
+const fontSize = 20;
+
+let activeCols = [];
+let board = [];
+let score = 0;
+
 const search = new URLSearchParams(window.location.search);
 const theme = search.has("theme") ? search.get("theme") : "clean";
 
@@ -47,15 +53,8 @@ const resizeCanvas = () => {
 let resizeTimeout;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(() => {
-    if (!window.visualViewport) {
-      return;
-    }
-    resizeCanvas();
-  }, 200);
+  resizeTimeout = setTimeout(resizeCanvas, 200);
 });
-
-const fontSize = 20;
 
 const levels = [
   { speed: 10, letters: ["A", "S", "D", "F", "G"] },
@@ -99,7 +98,6 @@ const levels = [
 ];
 
 let level = levels[0];
-let score = 0;
 
 const openKeyboard = () => {
   document.getElementById("input").focus();
@@ -110,9 +108,6 @@ const openKeyboard = () => {
 
 const getRandomLetter = () =>
   level.letters[Math.floor(Math.random() * level.letters.length)];
-
-let board = [];
-let activeCols = [];
 
 const getRandomIndex = () => {
   const cols = Array.from(board[0]).map((_, index) => index);
@@ -127,7 +122,12 @@ const getRandomIndex = () => {
 const addActiveCol = () => {
   const randomIndex = getRandomIndex();
   if (randomIndex !== undefined) {
-    activeCols.push({ letter: board[0][randomIndex], x: randomIndex, y: 0 });
+    activeCols.push({
+      letter: getRandomLetter(),
+      locked: false,
+      x: randomIndex,
+      y: 0,
+    });
   }
 };
 
@@ -147,6 +147,10 @@ const updateActiveCols = () => {
     if (board[max]) {
       col.y = max;
     }
+
+    if (max === board.length - 1) {
+      col.locked = true;
+    }
   });
 };
 
@@ -154,10 +158,6 @@ const resetBoard = (nextLevel) => {
   board = Array(Math.floor(canvas.height / fontSize))
     .fill("")
     .map(() => Array(Math.floor(canvas.width / fontSize)).fill(""));
-
-  for (const col in board[0]) {
-    board[0][col] = getRandomLetter();
-  }
 
   if (nextLevel) {
     console.log("next level", level);
@@ -230,11 +230,8 @@ const gameLoop = () => {
 
   drawBoard();
 
-  const filledScreen = activeCols.filter((col) => col.y === board.length - 1);
-  if (
-    activeCols.length === board[0].length &&
-    filledScreen.length === board[0].length
-  ) {
+  const filledScreen = activeCols.filter((col) => col.locked);
+  if (filledScreen.length === board[0].length) {
     gameState = "gameover";
   }
 
@@ -257,10 +254,11 @@ const startGame = () => {
 };
 
 const keyPressed = (key) => {
-  if (!activeCols[0]) return console.log("no active cols");
+  const activeCol = activeCols.filter((col) => !col.locked)[0];
+  if (!activeCol) return console.log("no active cols");
 
-  if (activeCols[0].letter === key.toUpperCase()) {
-    const activeCol = activeCols.shift();
+  if (activeCol.letter === key.toUpperCase()) {
+    activeCols = activeCols.filter((col) => col !== activeCol);
     for (const row in board) {
       if (row == 0) continue;
       board[row][activeCol.x] = "";
@@ -276,7 +274,7 @@ const keyPressed = (key) => {
 
     console.log(board);
     console.log(activeCols);
-    console.log("wrong key", activeCols[0].letter, key.toUpperCase());
+    console.log("wrong key", activeCol.letter, key.toUpperCase());
   }
 };
 
