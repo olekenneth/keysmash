@@ -172,8 +172,6 @@ const resetBoard = (nextLevel) => {
 
 resetBoard();
 
-let offset = fontSize;
-
 const setupCanvas = () => {
   // Clear and draw on the back buffer
   ctx.clearRect(0, 0, backBuffer.width, backBuffer.height);
