@@ -240,15 +240,15 @@ const gameLoop = () => {
 gameLoop();
 
 const startGame = () => {
+  if ("ontouchstart" in document.documentElement) {
+    openKeyboard();
+  }
+  if (gameState === "started") return;
   gameState = "started";
 
   level = levels[0];
   resetBoard();
   activeCols = [];
-  const isTouchDevice = "ontouchstart" in document.documentElement;
-  if (isTouchDevice) {
-    openKeyboard();
-  }
 };
 
 const keyPressed = (key) => {
