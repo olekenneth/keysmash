@@ -10,7 +10,8 @@ let oscillator = null;
 let gain = null;
 let gameState = "notstarted";
 
-const theme = "clean";
+const search = new URLSearchParams(window.location.search);
+const theme = search.has("theme") ? search.get("theme") : "clean";
 
 const playFrequency = async (frequency, type) => {
   if (!audioCtx) audioCtx = new AudioContext();
@@ -113,25 +114,24 @@ const getRandomLetter = () =>
 let board = [];
 let activeCols = [];
 
-const getRandomIndex = () => Math.floor(Math.random() * board[0].length);
+const getRandomIndex = () => {
+  const cols = Array.from(board[0]).map((_, index) => index);
+  const activeX = activeCols.map((col) => col.x);
+  const notActive = Array.from(cols).filter(
+    (_, index) => !activeX.includes(index)
+  );
 
-const addActiveCol = (i = 0) => {
-  if (i > 2) return;
+  return notActive[Math.floor(Math.random() * notActive.length)];
+};
+
+const addActiveCol = () => {
   const randomIndex = getRandomIndex();
-  const already = activeCols.find((col) => col.x == randomIndex);
-  if (already) {
-    return addActiveCol(i + 1);
-  } else {
+  if (randomIndex !== undefined) {
     activeCols.push({ letter: board[0][randomIndex], x: randomIndex, y: 0 });
   }
 };
 
 const updateActiveCols = () => {
-  const filledScreen = activeCols.filter((col) => col.y < board.length - 1);
-  if (activeCols.length === board[0].length && filledScreen.length === 0) {
-    gameState = "gameover";
-    return;
-  }
   activeCols.forEach((col) => {
     const max = col.y + 1;
     for (let row = 0; row < max; row++) {
@@ -207,7 +207,10 @@ const drawBoard = () => {
 resizeCanvas();
 
 const gameLoop = () => {
-  setTimeout(gameLoop, 350 - level.speed * 2);
+  const minSpeed = 150;
+  const maxSpeed = 300;
+  const speed = maxSpeed - (maxSpeed - minSpeed) * (level.speed / 100);
+  setTimeout(gameLoop, speed);
 
   setupCanvas();
   if (gameState !== "started") {
@@ -226,6 +229,15 @@ const gameLoop = () => {
   updateActiveCols();
 
   drawBoard();
+
+  const filledScreen = activeCols.filter((col) => col.y === board.length - 1);
+  if (
+    activeCols.length === board[0].length &&
+    filledScreen.length === board[0].length
+  ) {
+    gameState = "gameover";
+  }
+
   // Swap buffers
   forgroundCtx.drawImage(backBuffer, 0, 0);
 };
