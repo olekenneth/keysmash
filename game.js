@@ -60,43 +60,19 @@ const levels = [
   { speed: 10, letters: ["A", "S", "D", "F", "G"] },
   { speed: 15, letters: ["H", "J", "K", "L"] },
   {
-    speed: 20,
+    speed: 25,
     letters: ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
   },
   {
-    speed: 25,
+    speed: 35,
     letters: ["Q", "W", "E", "R", "T", "A", "S", "D", "F", "G"],
   },
   {
-    speed: 30,
+    speed: 50,
     letters: ["Y", "U", "I", "O", "P", "H", "J", "K", "L"],
   },
   {
-    speed: 100,
-    letters: [
-      "Q",
-      "W",
-      "E",
-      "R",
-      "T",
-      "A",
-      "S",
-      "D",
-      "F",
-      "G",
-      "Y",
-      "U",
-      "I",
-      "O",
-      "P",
-      "H",
-      "J",
-      "K",
-      "L",
-    ],
-  },
-  {
-    speed: 200,
+    speed: 70,
     letters: [
       "Q",
       "W",
@@ -230,7 +206,9 @@ const drawBoard = () => {
 
 resizeCanvas();
 
-setInterval(() => {
+const gameLoop = () => {
+  setTimeout(gameLoop, 350 - level.speed * 2);
+
   setupCanvas();
   if (gameState !== "started") {
     let text = "Click here to start";
@@ -250,7 +228,9 @@ setInterval(() => {
   drawBoard();
   // Swap buffers
   forgroundCtx.drawImage(backBuffer, 0, 0);
-}, 800 - level.speed * 60);
+};
+
+gameLoop();
 
 const startGame = () => {
   gameState = "started";
