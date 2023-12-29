@@ -256,13 +256,7 @@ const startGame = () => {
   }
 };
 
-document.addEventListener("touchstart", startGame);
-document.addEventListener("click", startGame);
-
-document.addEventListener("keydown", (event) => {
-  event.preventDefault();
-  const { key } = event;
-
+const keyPressed = (key) => {
   if (!activeCols[0]) return console.log("no active cols");
 
   if (activeCols[0].letter === key.toUpperCase()) {
@@ -283,5 +277,27 @@ document.addEventListener("keydown", (event) => {
     console.log(board);
     console.log(activeCols);
     console.log("wrong key", activeCols[0].letter, key.toUpperCase());
+  }
+};
+
+document.addEventListener("touchstart", startGame);
+document.addEventListener("click", startGame);
+
+document.getElementById("input").addEventListener("input", (event) => {
+  event.preventDefault();
+
+  const key = document.getElementById("input").value.slice(-1);
+
+  if (key) {
+    keyPressed(key);
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  event.preventDefault();
+  let { key } = event;
+
+  if (key) {
+    keyPressed(key);
   }
 });
