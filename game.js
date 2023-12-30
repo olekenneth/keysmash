@@ -148,7 +148,7 @@ const updateActiveCols = () => {
       col.y = max;
     }
 
-    if (max === board.length - 1) {
+    if (max === board.length) {
       col.locked = true;
     }
   });
@@ -220,7 +220,10 @@ const gameLoop = () => {
     return;
   }
 
-  if (Math.random() < 0.15 || activeCols.length === 0) {
+  if (
+    Math.random() < 0.15 ||
+    activeCols.filter((col) => !col.locked).length === 0
+  ) {
     addActiveCol();
   }
 
