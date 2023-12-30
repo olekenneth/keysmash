@@ -9,6 +9,10 @@ let audioCtx = null;
 let oscillator = null;
 let gain = null;
 let gameState = "notstarted";
+let boardHeight = 0;
+let boardWidth = 0;
+let boardCols = 0;
+let boardRows = 0;
 
 const fontSize = 20;
 
@@ -39,14 +43,14 @@ const playFrequency = async (frequency, type) => {
 };
 
 const resizeCanvas = () => {
-  const { height, width } = window.visualViewport;
+  const { innerHeight, innerWidth } = window;
 
-  canvas.width = width;
-  canvas.height = height;
-  canvas.style.width = width + "px";
-  canvas.style.height = height + "px";
-  backBuffer.width = width;
-  backBuffer.height = height;
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+  canvas.style.width = innerWidth + "px";
+  canvas.style.height = innerHeight + "px";
+  backBuffer.width = innerWidth;
+  backBuffer.height = innerHeight;
   resetBoard();
 };
 
@@ -57,19 +61,22 @@ window.addEventListener("resize", () => {
 });
 
 const levels = [
-  { speed: 10, letters: ["A", "S", "D", "F", "G"] },
-  { speed: 15, letters: ["H", "J", "K", "L"] },
+  { speed: 10, letters: ["A", "S", "D", "F", "G"], number: 1 },
+  { speed: 15, letters: ["H", "J", "K", "L"], number: 2 },
   {
     speed: 25,
     letters: ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+    number: 3,
   },
   {
     speed: 35,
     letters: ["Q", "W", "E", "R", "T", "A", "S", "D", "F", "G"],
+    number: 4,
   },
   {
     speed: 50,
     letters: ["Y", "U", "I", "O", "P", "H", "J", "K", "L"],
+    number: 5,
   },
   {
     speed: 70,
@@ -94,6 +101,7 @@ const levels = [
       "K",
       "L",
     ],
+    number: 6,
   },
 ];
 
@@ -155,17 +163,27 @@ const updateActiveCols = () => {
 };
 
 const resetBoard = (nextLevel) => {
-  board = Array(Math.floor(canvas.height / fontSize))
+  const { height, width } = window.visualViewport;
+
+  boardCols = Math.min(Math.floor((height - 10) / fontSize), 29);
+  boardRows = Math.min(Math.floor(width / fontSize), 29);
+  boardHeight = boardCols * fontSize;
+  boardWidth = boardRows * fontSize;
+
+  board = Array(Math.floor(boardCols))
     .fill("")
-    .map(() => Array(Math.floor(canvas.width / fontSize)).fill(""));
+    .map(() => Array(boardRows).fill(""));
 
   if (nextLevel) {
     console.log("next level", level);
+    const firstLockedCol = activeCols.filter((col) => col.locked)[0];
+    activeCols = activeCols.filter((col) => col !== firstLockedCol);
     const index = levels.findIndex((l) => l.speed === level.speed);
     if (levels[index + 1]) {
       level = levels[index + 1];
     } else {
       level.speed += 10;
+      level.number += 1;
     }
   }
 };
@@ -180,6 +198,14 @@ const setupCanvas = () => {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, backBuffer.width, backBuffer.height);
   ctx.fillStyle = "green";
+
+  ctx.strokeStyle = "green";
+  ctx.strokeRect(
+    backBuffer.width / 2 - boardWidth / 2,
+    5,
+    boardWidth + 4,
+    boardHeight + 5
+  );
   ctx.font = `${fontSize}px Arial`;
   ctx.textAlign = "right";
   ctx.textBaseline = "bottom";
@@ -190,16 +216,29 @@ const setupCanvas = () => {
   forgroundCtx.textBaseline = "middle";
 };
 
+const drawScore = () => {
+  ctx.fillStyle = "green";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  ctx.fillText(
+    `Score: ${score}. Level: ${level.number}`,
+    backBuffer.width / 2 - boardWidth / 2,
+    boardHeight + fontSize + 15
+  );
+};
+
 const drawBoard = () => {
   for (const row in board) {
     for (const col in board[row]) {
       const letter = board[row][col];
       if (letter) {
-        let x = fontSize + col * fontSize;
-        ctx.fillText(letter, x, row * fontSize);
+        let x =
+          backBuffer.width / 2 - boardWidth / 2 + fontSize + col * fontSize;
+        ctx.fillText(letter, x, 8 + fontSize + row * fontSize);
       }
     }
   }
+  drawScore();
 };
 
 resizeCanvas();
@@ -212,11 +251,18 @@ const gameLoop = () => {
 
   setupCanvas();
   if (gameState !== "started") {
-    let text = "Click here to start";
+    let text = "Ready?";
     if (gameState === "gameover") {
       text = "Game over";
     }
-    forgroundCtx.fillText(text, canvas.width / 2, canvas.height / 2);
+    forgroundCtx.fillText(text, canvas.width / 2, boardHeight / 2);
+    forgroundCtx.font = `26px Arial`;
+
+    forgroundCtx.fillText(
+      "Click to start",
+      canvas.width / 2,
+      boardHeight / 2 + 48
+    );
     return;
   }
 
@@ -252,6 +298,7 @@ const startGame = () => {
   level = levels[0];
   resetBoard();
   activeCols = [];
+  score = 0;
 };
 
 const keyPressed = (key) => {
@@ -261,7 +308,6 @@ const keyPressed = (key) => {
   if (activeCol.letter === key.toUpperCase()) {
     activeCols = activeCols.filter((col) => col !== activeCol);
     for (const row in board) {
-      if (row == 0) continue;
       board[row][activeCol.x] = "";
     }
 
