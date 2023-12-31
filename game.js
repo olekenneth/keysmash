@@ -244,9 +244,12 @@ const drawBoard = () => {
 resizeCanvas();
 
 const gameLoop = () => {
-  const minSpeed = 150;
+  const minSpeed = 90;
   const maxSpeed = 300;
-  const speed = maxSpeed - (maxSpeed - minSpeed) * (level.speed / 100);
+  let speed = maxSpeed - (maxSpeed - minSpeed) * (level.speed / 100);
+  if (speed < minSpeed) {
+    speed = minSpeed;
+  }
   setTimeout(gameLoop, speed);
 
   setupCanvas();
