@@ -165,7 +165,7 @@ const updateActiveCols = () => {
 const resetBoard = (nextLevel) => {
   const { height, width } = window.visualViewport;
 
-  boardCols = Math.min(Math.floor((height - 10) / fontSize), 29);
+  boardCols = Math.min(Math.floor(height / fontSize) - 1, 29);
   boardRows = Math.min(Math.floor(width / fontSize), 29);
   boardHeight = boardCols * fontSize;
   boardWidth = boardRows * fontSize;
