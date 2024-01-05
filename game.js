@@ -1,3 +1,9 @@
+// Link to GitHub repository
+// For more information, visit: https://github.com/olekenneth/keysmash
+
+// Please be aware that this project is licensed under the GPLv3 license.
+// Make sure to review the license terms before using or distributing the code.
+
 const canvas = document.getElementById("myCanvas");
 const forgroundCtx = canvas.getContext("2d");
 
