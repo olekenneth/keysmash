@@ -246,7 +246,7 @@ const resetBoard = (nextLevel) => {
     console.log("next level", level);
     const firstLockedCol = activeCols.filter((col) => col.locked)[0];
     activeCols = activeCols.filter((col) => col !== firstLockedCol);
-    const index = levels.findIndex((l) => l.speed === level.speed);
+    const index = levels.findIndex((l) => l === level);
     if (levels[index + 1]) {
       level = levels[index + 1];
     } else {
