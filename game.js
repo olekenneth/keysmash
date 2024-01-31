@@ -471,6 +471,6 @@ document.addEventListener("keydown", (event) => {
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
-    gameState = "paused";
+    // gameState = "paused";
   }
 });
