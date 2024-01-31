@@ -6,6 +6,14 @@
 
 const canvas = document.getElementById("myCanvas");
 const forgroundCtx = canvas.getContext("2d");
+const stats = {
+  correct: [],
+  wrong: [],
+  startTime: Date.now(),
+  maxLpm: 0,
+};
+
+const startTime = new Date().getTime();
 
 // Create a back buffer
 let backBuffer = document.createElement("canvas");
@@ -19,8 +27,64 @@ let boardHeight = 0;
 let boardWidth = 0;
 let boardCols = 0;
 let boardRows = 0;
+let speed = 0;
 
 const fontSize = 20;
+const allLetters = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+];
+
+const allSigns = [
+  "[",
+  "]",
+  "{",
+  "}",
+  "$",
+  "#",
+  "'",
+  "!",
+  "?",
+  ";",
+  ":",
+  "=",
+  "*",
+  "%",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "0",
+];
 
 let activeCols = [];
 let board = [];
@@ -67,24 +131,33 @@ window.addEventListener("resize", () => {
 });
 
 const levels = [
-  { speed: 10, letters: ["A", "S", "D", "F", "G"], number: 1 },
-  { speed: 15, letters: ["H", "J", "K", "L"], number: 2 },
   {
+    score: 5,
+    speed: 10,
+    letters: ["A", "S", "D", "F", "G"],
+    number: 1,
+  },
+  { score: 10, speed: 15, letters: ["H", "J", "K", "L"], number: 2 },
+  {
+    score: 15,
     speed: 25,
     letters: ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
     number: 3,
   },
   {
+    score: 25,
     speed: 35,
     letters: ["Q", "W", "E", "R", "T", "A", "S", "D", "F", "G"],
     number: 4,
   },
   {
+    score: 35,
     speed: 50,
     letters: ["Y", "U", "I", "O", "P", "H", "J", "K", "L"],
     number: 5,
   },
   {
+    score: 45,
     speed: 70,
     letters: [
       "Q",
@@ -110,65 +183,15 @@ const levels = [
     number: 6,
   },
   {
+    score: 60,
     speed: 40,
-    letters: [
-      "[",
-      "]",
-      "{",
-      "}",
-      "$",
-      "#",
-      "'",
-      "!",
-      "?",
-      ";",
-      ":",
-      "=",
-      "*",
-      "%",
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "0",
-    ],
+    letters: allSigns,
     number: 7,
   },
   {
+    score: 75,
     speed: 70,
-    letters: [
-      "Z",
-      "X",
-      "C",
-      "V",
-      "B",
-      "N",
-      "M",
-      "Q",
-      "W",
-      "E",
-      "R",
-      "T",
-      "A",
-      "S",
-      "D",
-      "F",
-      "G",
-      "Y",
-      "U",
-      "I",
-      "O",
-      "P",
-      "H",
-      "J",
-      "K",
-      "L",
-    ],
+    letters: allLetters,
     number: 8,
   },
 ];
@@ -189,7 +212,7 @@ const getRandomIndex = () => {
   const cols = Array.from(board[0]).map((_, index) => index);
   const activeX = activeCols.map((col) => col.x);
   const notActive = Array.from(cols).filter(
-    (_, index) => !activeX.includes(index)
+    (_, index) => !activeX.includes(index),
   );
 
   return notActive[Math.floor(Math.random() * notActive.length)];
@@ -251,6 +274,7 @@ const resetBoard = (nextLevel) => {
       level = levels[index + 1];
     } else {
       level.speed += 10;
+      level.score += 10;
       level.number += 1;
     }
   }
@@ -272,7 +296,7 @@ const setupCanvas = () => {
     backBuffer.width / 2 - boardWidth / 2,
     5,
     boardWidth + 4,
-    boardHeight + 5
+    boardHeight + 5,
   );
   ctx.font = `${fontSize}px Arial`;
   ctx.textAlign = "right";
@@ -285,13 +309,20 @@ const setupCanvas = () => {
 };
 
 const drawScore = () => {
+  const lpm = stats.correct.length / ((Date.now() - stats.startTime) / 1000);
+  if (lpm > stats.maxLpm) {
+    stats.maxLpm = lpm;
+  }
+
   ctx.fillStyle = "green";
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
   ctx.fillText(
-    `Score: ${score}. Level: ${level.number}`,
+    `Score: ${score}. Level: ${level.number}. Smashed keys: ${
+      stats.correct.length
+    }/${stats.wrong.length}. LPM: ${lpm.toFixed(3)}/${stats.maxLpm.toFixed(3)}`,
     backBuffer.width / 2 - boardWidth / 2,
-    boardHeight + fontSize + 15
+    boardHeight + fontSize + 15,
   );
 };
 
@@ -312,11 +343,11 @@ const drawBoard = () => {
 resizeCanvas();
 
 const gameLoop = () => {
-  const minSpeed = 120;
-  const maxSpeed = 300;
-  let speed = maxSpeed - (maxSpeed - minSpeed) * (level.speed / 100);
-  if (speed < minSpeed) {
-    speed = minSpeed;
+  const maxSpeed = 150;
+  const minSpeed = 300;
+  speed = minSpeed - (minSpeed - maxSpeed) * (level.speed / 100);
+  if (speed < maxSpeed) {
+    speed = maxSpeed - level.number;
   }
   setTimeout(gameLoop, speed);
 
@@ -326,13 +357,16 @@ const gameLoop = () => {
     if (gameState === "gameover") {
       text = "Game over";
     }
+    if (gameState === "paused") {
+      text = "Paused";
+    }
     forgroundCtx.fillText(text, canvas.width / 2, boardHeight / 2);
     forgroundCtx.font = `26px Arial`;
 
     forgroundCtx.fillText(
       "Click to start",
       canvas.width / 2,
-      boardHeight / 2 + 48
+      boardHeight / 2 + 48,
     );
     return;
   }
@@ -359,40 +393,58 @@ const gameLoop = () => {
 
 gameLoop();
 
-const startGame = () => {
-  if ("ontouchstart" in document.documentElement) {
-    openKeyboard();
-  }
-  if (gameState === "started") return;
-  gameState = "started";
-
+const resetGame = () => {
   level = levels[0];
   resetBoard();
   activeCols = [];
   score = 0;
+  stats.correct = [];
+  stats.wrong = [];
+  stats.startTime = Date.now();
+  stats.maxLpm = 0;
+};
+
+const startGame = () => {
+  if ("ontouchstart" in document.documentElement) {
+    openKeyboard();
+  }
+  if (gameState === "started") {
+    gameState = "paused";
+    return;
+  }
+  if (gameState !== "paused") {
+    resetGame();
+  }
+  gameState = "started";
 };
 
 const keyPressed = (key) => {
+  if (gameState !== "started") return;
   const activeCol = activeCols.filter((col) => !col.locked)[0];
-  if (!activeCol) return console.log("no active cols");
+  if (!activeCol) {
+    stats.wrong.push(key);
+    return;
+  }
 
-  if (activeCol.letter === key.toUpperCase()) {
-    activeCols = activeCols.filter((col) => col !== activeCol);
-    for (const row in board) {
-      board[row][activeCol.x] = "";
+  key = key.toUpperCase();
+  if ([allSigns, allLetters].flat().includes(key)) {
+    if (activeCol.letter === key) {
+      stats.correct.push(key);
+      activeCols = activeCols.filter((col) => col !== activeCol);
+      for (const row in board) {
+        board[row][activeCol.x] = "";
+      }
+
+      score++;
+      playFrequency(440, "sine");
+      if (score === level.score) {
+        console.log("NEXT LEVL");
+        resetBoard(true);
+      }
+    } else {
+      stats.wrong.push(key);
+      playFrequency(87.31, "triangle");
     }
-
-    score++;
-    playFrequency(440, "sine");
-    if (score === level.speed) {
-      resetBoard(true);
-    }
-  } else {
-    playFrequency(87.31, "triangle");
-
-    console.log(board);
-    console.log(activeCols);
-    console.log("wrong key", activeCol.letter, key.toUpperCase());
   }
 };
 
@@ -410,10 +462,15 @@ document.getElementById("input").addEventListener("input", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  event.preventDefault();
   let { key } = event;
 
   if (key) {
     keyPressed(key);
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    gameState = "paused";
   }
 });
